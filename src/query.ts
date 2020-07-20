@@ -65,8 +65,8 @@ export class GeoFireQuery<T = any> {
     const radiusBuffer = radius * 1.02; // buffer for edge distances
     const centerHash = center.geohash.substr(0, precision);
     const area = neighbors(centerHash).concat(centerHash);
-
     const { latitude: centerLat, longitude: centerLng } = center.geopoint;
+    const fields = field.split('.');
 
     // Used to cancel the individual geohash subscriptions
     const complete = new Subject();
@@ -88,7 +88,8 @@ export class GeoFireQuery<T = any> {
 
         // Filter by radius
         const filtered = reduced.filter(val => {
-          const { latitude, longitude } = val[field].geopoint;
+          const obj = fields.reduce((acc, curr) => {return acc[curr];}, val);
+          const { latitude, longitude } = obj.geopoint;
 
           return (
             distance([centerLat, centerLng], [latitude, longitude]) <=
@@ -109,7 +110,8 @@ export class GeoFireQuery<T = any> {
         // Map and sort to final output
         return filtered
           .map(val => {
-            const { latitude, longitude } = val[field].geopoint;
+            const obj = fields.reduce((acc, curr) => {return acc[curr];}, val);
+            const { latitude, longitude } = obj.geopoint;
 
             const hitMetadata = {
               distance: distance([centerLat, centerLng], [latitude, longitude]),
